@@ -15,7 +15,7 @@ data("instacart")
 
 ```{r}
 #check the data
-head(instacart, 20)
+head(instacart, 10)
 summary(instacart)
 ```
 
@@ -27,6 +27,30 @@ instacart %>%
   group_by(aisle_id) %>%                   ##according aisle_id to group
   summarize(aisle_count = n()) %>%         ##count the aisle id appear time
   arrange(desc(aisle_count))               ##according the aisle_cout from large to small
+
+
+```
+
+There are 134 aisle here and aisle id 83 is most ordered and times is 150609
+
+```{r}
+#plot show the number of items ordered in each aisle
+instacart %>% 
+  janitor::clean_names() %>%                        ##clean the data
+  group_by(aisle_id) %>%                            ##according aisle_id to group
+  summarize(product_total_order = n()) %>%          ##count the aisle id appear time
+  filter(product_total_order >= 10000) %>%          ##according the aisle_cout from large to small
+  ggplot(aes(x = aisle_id, y = product_total_order)) +
+  geom_point(size = 5, color = "red") +
+  labs(
+    title = "number of productions ordered from each aisle",
+    x = "number of productions ordered",
+    y = "aisle identification",
+    caption = "data from  https://www.instacart.com/datasets/grocery-shopping-2017"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold", color = "blue")
+  )
 
 
 ```
