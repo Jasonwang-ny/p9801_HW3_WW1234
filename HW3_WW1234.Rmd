@@ -1,0 +1,33 @@
+---
+title: "HW3_WW1234"
+author: "Jason Wang"
+date: "10/4/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(p8105.datasets)
+data("instacart")
+
+```
+
+```{r}
+#check the data
+head(instacart, 20)
+summary(instacart)
+```
+
+
+```{r}
+#count the number of aisle_id
+instacart %>% 
+  janitor::clean_names() %>%               ##clean the data
+  group_by(aisle_id) %>%                   ##according aisle_id to group
+  summarize(aisle_count = n()) %>%         ##count the aisle id appear time
+  arrange(desc(aisle_count))               ##according the aisle_cout from large to small
+
+
+```
+
