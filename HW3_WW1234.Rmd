@@ -55,3 +55,21 @@ instacart %>%
 
 ```
 
+```{r}
+## setup a filter factor 
+filter_factor = c("baking ingredients", "dog food care", "packaged vegetables fruits")
+
+instacart %>% 
+  group_by(aisle_id, aisle) %>% 
+  summarize(
+    order_times = n()
+  ) %>% 
+  filter(aisle %in% filter_factor) %>% 
+  show()
+   
+
+
+
+```
+
+
