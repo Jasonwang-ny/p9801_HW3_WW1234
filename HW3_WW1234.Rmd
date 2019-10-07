@@ -10,9 +10,13 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(p8105.datasets)
 data("instacart")
+library(lubridate)
+library(ggplot2)
 
 ```
 
+
+# Problem 1
 ```{r}
 #check the data
 head(instacart, 10)
@@ -56,20 +60,184 @@ instacart %>%
 ```
 
 ```{r}
-## setup a filter factor 
-filter_factor = c("baking ingredients", "dog food care", "packaged vegetables fruits")
+##setup aisle filter factor 
+aisle_filter_factor = c("baking ingredients", "dog food care", "packaged vegetables fruits")
 
 instacart %>% 
   group_by(aisle_id, aisle) %>% 
   summarize(
     order_times = n()
   ) %>% 
-  filter(aisle %in% filter_factor) %>% 
+  filter(aisle %in% aisle_filter_factor) %>% 
   show()
-   
 
+```
+
+```{r}
+##setup filter factor with "Pink Lady Apples" and "Coffee Ice Cream"
+product_name_filter = c("Pink Lady Apples", "Coffee Ice Cream")
+
+##filter the product name with product_name_filter
+instacart %>% 
+  select(order_dow, order_hour_of_day, product_name) %>% 
+  filter(product_name %in% product_name_filter) %>% 
+  group_by(order_dow, product_name) %>% 
+  summarize(
+    mean_order_hour = round(mean(order_hour_of_day), digits = 0)
+    ) %>% 
+  pivot_wider(
+    names_from = "product_name",
+    values_from = "mean_order_hour"
+  ) %>% 
+  mutate(day_of_week = wday(order_dow + 1, label = TRUE)) %>% 
+  janitor::clean_names() %>% 
+  select(day_of_week, coffee_ice_cream, pink_lady_apples, order_dow) %>% 
+knitr::kable(align=c(rep('c',times=4)), caption = "mean order time of two productions at weekday")
+
+```
+
+# Problem 2
+
+```{r}
+#setup Health status filter factor
+health_status = c("Poor", "Fair", "Good", "Very good", "Excellent")
+
+brfss_dataset = brfss_smart2010 %>%                         ##upload original dataset
+  janitor::clean_names() %>%                                ##clean the dataset
+  filter(topic == "Overall Health") %>%                     ##select the topic with "Overall Health"
+  filter(response %in% health_status)                       ##select the response value with "poor", "Fair", "good" and 
+
+##brfss_dataset$response = brfss_dataset$response[order(match(brfss_dataset$response, 
+##                                                            health_status))]       ##ordered response from "Poor" to "Excellent"
 
 
 ```
 
+```{r}
+##in 2002, which state were observed more than 7 locations
+location_observed_2002 = brfss_dataset %>% 
+  select(year, locationabbr, locationdesc) %>% 
+  group_by(year, locationabbr) %>% 
+  summarize(
+    desc_total = n()
+  ) %>% 
+  filter(year == 2002, desc_total >= 7) 
+
+knitr::kable(location_observed_2002, align=c(rep('c',times=3)),
+             caption = "states were observed more than 7 locations in 2002")
+
+##summary the location_observed_2002
+count(location_observed_2002)
+summary(location_observed_2002)
+
+```
+
+
+
+
+```{r}
+##in 2010, which state were observed more than 7 locations
+location_observed_2010 = brfss_dataset %>% 
+  select(year, locationabbr, locationdesc) %>% 
+  group_by(year, locationabbr) %>% 
+  summarize(
+    desc_total = n()
+  ) %>% 
+  filter(year == 2010, desc_total >= 7)
+
+knitr::kable(location_observed_2010, align=c(rep('c',times=3)), 
+             caption = "states were observed more than 7 locations in 2010")
+
+##summary the location_observed_2010
+count(location_observed_2010)
+summary(location_observed_2010)
+
+```
+
+
+```{r}
+##upload excellent response
+excel_resp_dataset = brfss_dataset %>% 
+  filter(response == "Excellent") %>% 
+  select(year, locationabbr, data_value) %>% 
+  group_by(year, locationabbr) %>% 
+  summarize(
+    mean_data_value = mean(data_value, na.rm = TRUE)
+  ) 
+
+ggplot(excel_resp_dataset, aes(x = year, y = mean_data_value)) + 
+  geom_line(aes(group = locationabbr), color = "blue") + 
+  geom_point(aes(color = locationabbr)) +
+    labs(fill = "States Abbrevation")
+```
+
+```{r}
+## 2006 and 2010 data_value distribution of "poor", ", "Fair", "Good", "Very good", "Excellent"
+
+data_value_NY_2006_and_2010 = brfss_dataset %>% 
+  filter(locationabbr == "NY") %>% 
+  filter(year == c("2006", "2010")) 
+
+ggplot(data_value_NY_2006_and_2010, aes(x = response, y = data_value)) +
+  geom_boxplot() +
+  facet_grid(.~year) +
+  xlab("response") +
+  ylab("data value")
+
+
+```
+
+# Problem 3
+```{r}
+accelerometers_dataset = read_csv(file = "./data/accel_data.csv") %>%         ##upload the dataset
+  janitor::clean_names() %>%                                                  ##clean the dataset
+mutate(
+    weekday_or_weekend = case_when(
+      day == "Monday"     ~ "weekday",
+      day == "Tuesday"    ~ "weekday",
+      day == "Wednesday"  ~ "weekday",
+      day == "Thursday"   ~ "weekday",
+      day == "Friday"     ~ "weekday",
+      day == "Saturday"   ~ "weekend",
+      day == "Sunday"     ~ "weekend",
+      TRUE                ~ "NA"
+    )
+  ) %>%                                                                       ##add a new viariable weekday_or_weekend
+  pivot_longer(
+  activity_1:activity_1440,
+  names_to = "minutes",
+  values_to = "measured_value",
+  names_prefix = "activity_"
+)                                                                             ##
+
+accelerometers_dataset$minutes = as.integer(accelerometers_dataset$minutes)   ##convert the viariable minutes from chr to int
+
+
+```
+
+
+```{r}
+##convert the week and day_id to chr
+##accelerometers_dataset$week = as.character(accelerometers_dataset$week)
+##accelerometers_dataset$day_id = as.character(accelerometers_dataset$day_id)
+
+##total activity of every day
+accem_day_dataset = accelerometers_dataset %>% 
+  group_by(week, day_id) %>% 
+ summarize(
+   total_activity = sum(measured_value)
+ ) 
+
+knitr::kable(accem_day_dataset, align=c(rep('c',times=3)), caption = "Accelerometers total measured activity for each day")
+
+```
+
+```{r}
+accem_day_dataset %>% 
+  ggplot(aes(x = day_id, y = total_activity, group = week, color = week)) +
+  geom_line() +
+  xlab("total activity") +
+  ylab("day id") 
+
+```
 
