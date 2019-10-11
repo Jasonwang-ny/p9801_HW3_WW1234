@@ -119,16 +119,21 @@ knitr::kable(mean_ordered_time_dataset, align=c(rep('c',times=8)), caption = "me
 
 ```{r}
 #setup Health status filter factor
-health_status = c("Poor", "Fair", "Good", "Very good", "Excellent")
+health_factor <- c("Excellent", "Very good",  "Good", "Fair", "Poor")
 
 brfss_dataset = brfss_smart2010 %>%                         ##upload original dataset
   janitor::clean_names() %>%                                ##clean the dataset
   filter(topic == "Overall Health") %>%                     ##select the topic with "Overall Health"
-  filter(response %in% health_status)                       ##select the response value with "poor", "Fair", "good" and 
+  filter(response %in% health_factor)                       ##select the response value with "poor", "Fair", "good" and 
 
-##brfss_dataset$response = brfss_dataset$response[order(match(brfss_dataset$response, 
-##                                                            health_status))]       ##ordered response from "Poor" to "Excellent"
+brfss_dataset$response <-  factor(brfss_dataset$response, 
+                       levels =  c("Poor", 
+                                   "Fair", 
+                                   "Good", 
+                                   "Very good", 
+                                   "Excellent"))           ##modify variable response from charater to factor, and the same time change the order of observation value 
 
+brfss_dataset = brfss_dataset[order(brfss_dataset$response, decreasing = FALSE), ]  ##ordered response from "Poor" to "Excellent"
 
 ```
 
@@ -187,7 +192,15 @@ excel_resp_dataset = brfss_dataset %>%
 ggplot(excel_resp_dataset, aes(x = year, y = mean_data_value)) + 
   geom_line(aes(group = locationabbr), color = "blue") + 
   geom_point(aes(color = locationabbr)) +
-    labs(fill = "States Abbrevation")
+  labs(
+    title = "Mead data value in different states in year 2002~2010",
+    x = "Year",
+    y = "aisle identification",
+    caption = "data from  https://www.instacart.com/datasets/grocery-shopping-2017"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 15, face = "bold", color = "blue")
+  )
 ```
 
 ```{r}
@@ -195,13 +208,28 @@ ggplot(excel_resp_dataset, aes(x = year, y = mean_data_value)) +
 
 data_value_NY_2006_and_2010 = brfss_dataset %>% 
   filter(locationabbr == "NY") %>% 
-  filter(year == c("2006", "2010")) 
+  filter(year == c("2006", "2010")) %>% 
+  group_by(locationdesc) 
+
+
+data_value_NY_2006_and_2010$locationdesc = sapply(strsplit(
+  data_value_NY_2006_and_2010$locationdesc, 
+  split = "-", 
+  fixed=TRUE), function(x) (x[2]))
 
 ggplot(data_value_NY_2006_and_2010, aes(x = response, y = data_value)) +
-  geom_boxplot() +
-  facet_grid(.~year) +
-  xlab("response") +
-  ylab("data value")
+  geom_col() +
+  facet_grid(locationdesc~year) +
+  labs(
+    title = "ratio of 5 different response of country of NY state in 2006 and 2010",
+    x = "Ration",
+    y = "response",
+    caption = "data from  https://www.cdc.gov/BRFSS/"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold", color = "blue")
+  ) +
+  coord_flip()
 
 
 ```
