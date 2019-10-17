@@ -259,6 +259,10 @@ mutate(
 
 accelerometers_dataset$minutes = as.integer(accelerometers_dataset$minutes)   ##convert the viariable minutes from chr to int
 
+##summary the data
+str(accelerometers_dataset)
+head(accelerometers_dataset, 10)
+summary(accelerometers_dataset)
 
 ```
 
@@ -277,14 +281,23 @@ accem_day_dataset = accelerometers_dataset %>%
 
 knitr::kable(accem_day_dataset, align=c(rep('c',times=3)), caption = "Accelerometers total measured activity for each day")
 
+
+
 ```
 
 ```{r}
 accem_day_dataset %>% 
   ggplot(aes(x = day_id, y = total_activity, group = week, color = week)) +
   geom_line() +
-  xlab("total activity") +
-  ylab("day id") 
+  labs(
+    title = "ratio of 5 different response of country of NY state in 2006 and 2010",
+    x = "Ration",
+    y = "response",
+    caption = "data from  https://www.cdc.gov/BRFSS/"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold", color = "blue")
+  )
 
 ```
 
